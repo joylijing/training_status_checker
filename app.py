@@ -3,6 +3,7 @@ import pandas as pd
 from io import BytesIO
 from fuzzywuzzy import fuzz
 import re
+import os
 
 app = Flask(__name__)
 
@@ -130,4 +131,4 @@ def update_training_status(table1, index, time_in_session):
         table1.at[index, "Training status"] = "Webinar Registration Pending"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
