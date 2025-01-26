@@ -6,3 +6,5 @@ dash-mantine-components==0.15.2
 dash-iconify==0.1.2
 fuzzywuzzy==0.18.0
 openpyxl==3.0.7
+Flask==2.3.2
+python-Levenshtein==0.12.2
