@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Status Checker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .instruction-note {
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #555;
+        }
+        .upload-form {
+            margin-bottom: 20px;
+        }
+        .upload-form input[type="file"] {
+            margin-bottom: 10px;
+        }
+        .upload-form button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .upload-form button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Training Status Checker</h1>
+        <div class="instruction-note">
+            <p>This tool checks the training status of individuals listed in Table1 against the attendance data in Table2.</p>
+            <p>Table1 data is exported directly from Smartsheet, and Table2 data is exported directly from GoToWebinar analytics.</p>
+            <p>For the tool to work correctly:</p>
+            <ol>
+                <li>Ensure both Excel files are named exactly as <strong>Table1.xlsx</strong> and <strong>Table2.xlsx</strong>.</li>
+                <li>Upload the files using the fields below.</li>
+            </ol>
+        </div>
+        <form class="upload-form" action="/" method="post" enctype="multipart/form-data">
+            <label for="table1">Upload Table1 (Excel file):</label>
+            <input type="file" name="table1" id="table1" accept=".xlsx" required>
+            <br>
+            <label for="table2">Upload Table2 (Excel file):</label>
+            <input type="file" name="table2" id="table2" accept=".xlsx" required>
+            <br>
+            <button type="submit">Check Training Status</button>
+        </form>
+    </div>
+</body>
+</html>
