@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Training Status Checker</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -116,12 +116,22 @@
 
     function processTables(table1, table2) {
       return table1.map(record => {
-        const emailMatch = table2.find(item => item['Email Address'] === record['Email Address']);
+        // Normalize the names for comparison
+        const table1Name = normalizeName(record['Guest Editor Name']);
+        let match = table2.find(item => item['Email Address'] === record['Email Address']);
+
+        // If no email match, try matching by name
+        if (!match) {
+          match = table2.find(item =>
+            normalizeName(`${item['First Name']} ${item['Last Name']}`) === table1Name
+          );
+        }
+
         record['Time in Session'] = '';
         record['Training status'] = 'Webinar Registration Pending';
 
-        if (emailMatch) {
-          const timeInSession = emailMatch['Time in Session'];
+        if (match) {
+          const timeInSession = match['Time in Session'];
           record['Time in Session'] = timeInSession;
 
           if (!timeInSession) {
@@ -137,6 +147,10 @@
         }
         return record;
       });
+    }
+
+    function normalizeName(name) {
+      return name ? name.toLowerCase().trim() : '';
     }
 
     function parseTimeInSession(time) {
