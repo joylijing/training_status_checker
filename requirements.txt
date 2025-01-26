@@ -5,3 +5,4 @@ gunicorn==23.0.0
 dash-mantine-components==0.15.2
 dash-iconify==0.1.2
 fuzzywuzzy==0.18.0
+openpyxl==3.0.7
