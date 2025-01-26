@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Training Status Checker</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .file-input {
+      margin: 10px 0;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    input[type="file"] {
+      margin-bottom: 20px;
+    }
+    button {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>Training Status Checker</h1>
+  <div class="container">
+    <form id="upload-form">
+      <div class="file-input">
+        <label for="table1">Upload Table1 (XLSX):</label>
+        <input type="file" id="table1" accept=".xlsx" required>
+      </div>
+      <div class="file-input">
+        <label for="table2">Upload Table2 (XLSX):</label>
+        <input type="file" id="table2" accept=".xlsx" required>
+      </div>
+      <button type="submit">Process Files</button>
+    </form>
+    <div class="result" id="result"></div>
+  </div>
+  <script>
+    document.getElementById('upload-form').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      const table1File = document.getElementById('table1').files[0];
+      const table2File = document.getElementById('table2').files[0];
+
+      if (!table1File || !table2File) {
+        alert('Please upload both Table1 and Table2 files.');
+        return;
+      }
+
+      // Parse Excel files
+      const table1Data = await parseExcel(table1File);
+      const table2Data = await parseExcel(table2File);
+
+      // Process the data
+      const updatedTable1 = processTables(table1Data, table2Data);
+
+      // Generate and download the updated Excel file
+      const workbook = XLSX.utils.book_new();
+      const worksheet = XLSX.utils.json_to_sheet(updatedTable1);
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Updated Table1');
+      XLSX.writeFile(workbook, 'Updated_Table1.xlsx');
+
+      document.getElementById('result').innerText = 'Processing complete! Updated Table1 downloaded.';
+    });
+
+    function parseExcel(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          const data = new Uint8Array(event.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const sheetName = workbook.SheetNames[0];
+          const worksheet = workbook.Sheets[sheetName];
+          const json = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
+          resolve(json);
+        };
+        reader.onerror = reject;
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function processTables(table1, table2) {
+      return table1.map(record => {
+        const emailMatch = table2.find(item => item['Email Address'] === record['Email Address']);
+        record['Time in Session'] = '';
+        record['Training status'] = 'Webinar Registration Pending';
+
+        if (emailMatch) {
+          const timeInSession = emailMatch['Time in Session'];
+          record['Time in Session'] = timeInSession;
+
+          if (!timeInSession) {
+            record['Training status'] = 'Webinar Registration Pending';
+          } else {
+            const timeValue = parseTimeInSession(timeInSession);
+            if (timeValue < 15) {
+              record['Training status'] = 'Webinar Training Pending';
+            } else {
+              record['Training status'] = 'Webinar Training Complete';
+            }
+          }
+        }
+        return record;
+      });
+    }
+
+    function parseTimeInSession(time) {
+      if (!time) return 0;
+
+      const parts = time.split(' ');
+      if (parts.includes('minutes')) {
+        const mins = parseInt(parts[0], 10) || 0;
+        return mins;
+      }
+      return 0;
+    }
+  </script>
+</body>
+</html>
