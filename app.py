@@ -1,3 +1,9 @@
+# Below is a revised version of your "app.py" file that uses a more robust
+# fuzzy logic approach. The primary change is that we've replaced
+# the simple fuzz.ratio() with fuzz.token_set_ratio(), which tends to handle
+# extra words or rearranged name tokens better (such as middle names or reordered
+# last names). The rest of the code structure is kept mostly the same.
+
 from flask import Flask, request, render_template, send_file
 import pandas as pd
 from io import BytesIO
@@ -43,6 +49,7 @@ def index():
 
     return render_template("index.html")
 
+
 def parse_time_in_session(time_str):
     """
     Convert a time string (e.g., "2 hours 8 minutes" or "59 minutes") to total minutes.
@@ -66,6 +73,7 @@ def parse_time_in_session(time_str):
         total_minutes += int(minutes_match.group(1))  # Add minutes
 
     return float(total_minutes) if total_minutes > 0 else float("nan")
+
 
 def perform_check(table1, table2):
     # Ensure the "Training status" and "Time in Session" columns are of the correct types
@@ -99,9 +107,14 @@ def perform_check(table1, table2):
             best_match = None
             best_score = 0
 
-            for table2_name in name_to_time.keys():
-                similarity_score = fuzz.ratio(name.lower(), table2_name.lower())
-                if similarity_score > best_score and similarity_score > 80:  # Threshold for a good match
+            for table2_name, t2_time in name_to_time.items():
+                # Using token_set_ratio handles extra words (like middle names) and 
+                # reordering of name tokens better than a simple ratio.
+                similarity_score = fuzz.token_set_ratio(name.lower(), table2_name.lower())
+
+                # You might want to experiment with thresholds: 70, 75, 80, 85, etc.
+                # The higher the threshold, the more precise, but fewer matches.
+                if similarity_score > best_score and similarity_score >= 80:
                     best_score = similarity_score
                     best_match = table2_name
 
@@ -119,6 +132,7 @@ def perform_check(table1, table2):
 
     return table1
 
+
 def update_training_status(table1, index, time_in_session):
     if pd.isna(time_in_session):
         table1.at[index, "Training status"] = "Webinar Registration Pending"
@@ -129,6 +143,7 @@ def update_training_status(table1, index, time_in_session):
     else:
         # Handle unexpected cases (e.g., strings that couldn't be parsed)
         table1.at[index, "Training status"] = "Webinar Registration Pending"
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
