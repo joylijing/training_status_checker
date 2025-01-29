@@ -41,7 +41,8 @@
         <h1>Training Status Checker</h1>
         <div class="instruction-note">
             <p>This tool checks the training status of individuals listed in Table1 against the attendance data in Table2.</p>
-            <p>Table1 data is exported directly from Smartsheet, and Table2 data is exported directly from GoToWebinar analytics.</p>
+            <p>Table1 data is extracted from Smartsheet, and Table2 data is extracted from GoToWebinar Analytics report. The tool first matches records by email address.
+If an email doesn’t match, it attempts a fuzzy name match. </p>
             <p>For the tool to work correctly:</p>
             <ol>
                 <li>Ensure both Excel files are named exactly as <strong>Table1.xlsx</strong> and <strong>Table2.xlsx</strong>.</li>
