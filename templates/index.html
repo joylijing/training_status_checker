@@ -42,7 +42,7 @@
         <div class="instruction-note">
             <p>This tool checks the training status of individuals listed in Table1 against the attendance data in Table2.</p>
             <p>Table1 data is extracted from Smartsheet, and Table2 data is extracted from GoToWebinar Analytics report. The tool first matches records by email address.
-If an email doesn’t match, it attempts a fuzzy name match. </p>
+If an email doesn’t match, it attempts a fuzzy name match. It also assesses the timing by checking if two weeks have passed since the "Date of entry." In that case, if the status is not already complete, the status is updated to "Webinar Training Incomplete." </p>
             <p>For the tool to work correctly:</p>
             <ol>
                 <li>Ensure both Excel files are named exactly as <strong>Table1.xlsx</strong> and <strong>Table2.xlsx</strong>.</li>
