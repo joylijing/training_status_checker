@@ -1,15 +1,10 @@
-# Below is a revised version of your "app.py" file that uses a more robust
-# fuzzy logic approach. The primary change is that we've replaced
-# the simple fuzz.ratio() with fuzz.token_set_ratio(), which tends to handle
-# extra words or rearranged name tokens better (such as middle names or reordered
-# last names). The rest of the code structure is kept mostly the same.
-
 from flask import Flask, request, render_template, send_file
 import pandas as pd
 from io import BytesIO
 from fuzzywuzzy import fuzz
 import re
 import os
+from datetime import datetime, timedelta  # New import for date checking
 
 app = Flask(__name__)
 
@@ -27,13 +22,26 @@ def index():
         # Clean and preprocess the "Time in Session" column in Table2
         table2["Time in Session"] = table2["Time in Session"].apply(parse_time_in_session)
 
-        # Perform the check
+        # Perform the check using email and fuzzy matching
         updated_table1 = perform_check(table1, table2)
 
-        # Select only the desired columns for the output
-        updated_table1 = updated_table1[["Guest Editor Name", "Email Address", "Time in Session", "Training status"]]
+        # Third-round check: If "Date of Entry" column exists, then update training status based on date.
+        # If today is two weeks past the date of entry and training is not "Webinar Training Complete",
+        # mark it as "Webinar Training Incomplete."
+        if "Date of entry" in updated_table1.columns:
+            today = datetime.today().date()
+            for index, row in updated_table1.iterrows():
+                date_entry = row["Date of entry"]
+                if pd.notna(date_entry):
+                    try:
+                        entry_date = pd.to_datetime(date_entry).date()
+                    except Exception:
+                        continue  # skip rows with unparseable dates
+                    if (today - entry_date).days >= 14 and updated_table1.at[index, "Training status"] != "Webinar Training Complete":
+                        updated_table1.at[index, "Training status"] = "Webinar Training Incomplete"
 
-        # Save the updated Table1 to a new Excel file
+        # Save the updated Table1 to a new Excel file.
+        # Note: We are keeping all columns of Table1 for the output.
         output = BytesIO()
         with pd.ExcelWriter(output, engine="openpyxl") as writer:
             updated_table1.to_excel(writer, index=False, sheet_name="Updated Table1")
@@ -103,7 +111,7 @@ def perform_check(table1, table2):
                 table1.at[index, "Time in Session"] = f"{int(time_in_session)} minutes"
             update_training_status(table1, index, time_in_session)
         else:
-            # Secondary check: Match by name using fuzzy matching
+            # Secondary check: Match by name using fuzzy matching with token_set_ratio.
             best_match = None
             best_score = 0
 
@@ -112,8 +120,7 @@ def perform_check(table1, table2):
                 # reordering of name tokens better than a simple ratio.
                 similarity_score = fuzz.token_set_ratio(name.lower(), table2_name.lower())
 
-                # You might want to experiment with thresholds: 70, 75, 80, 85, etc.
-                # The higher the threshold, the more precise, but fewer matches.
+                # Experiment with thresholds: 70, 75, 80, 85, etc.
                 if similarity_score > best_score and similarity_score >= 80:
                     best_score = similarity_score
                     best_match = table2_name
